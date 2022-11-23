@@ -46,7 +46,11 @@ osThreadId defaultTaskHandle;
 osThreadId FastTaskHandle;
 osThreadId SlowTaskHandle;
 /* USER CODE BEGIN PV */
+uint8_t Received[5];
 
+uint8_t floor;
+uint8_t speed;
+uint8_t error;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -58,6 +62,41 @@ void StartFastTask(void const * argument);
 void StartSlowTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+
+uint8_t Data[40]; //buffer array
+uint16_t size = 0; //message size
+uint8_t variable_to_send = 0;
+char string_to_send[6];
+
+
+if(Received[0] == 'F' && Received[1] == 'L' && Received[2] == 'R'){
+	floor=(Received[3]-48)*10+Received[4]-48;
+	variable_to_send=floor;
+	strcpy(string_to_send,"floor");
+}
+else if(Received[0] == 'S' && Received[1] == 'P' && Received[2] == 'D'){
+	speed=(Received[3]-48)*10+Received[4]-48;
+	variable_to_send=speed;
+	strcpy(string_to_send,"speed");
+}
+else{
+	error++;
+	variable_to_send=error;
+	strcpy(string_to_send,"error");
+}
+
+
+size = sprintf(Data, "Received message: %s = %d\n\r",string_to_send, variable_to_send);
+
+HAL_UART_Transmit_IT(&huart2, Data, size); //transmit data with interrupt
+
+HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+HAL_UART_Receive_IT(&huart2, Received, 5); //wait for the next message
+
+
+}
 
 /* USER CODE END PFP */
 
@@ -82,7 +121,8 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
+  floor = 0;
+  speed = 0;
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -96,7 +136,7 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  HAL_UART_Receive_IT(&huart2, &Received, 5);
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN RTOS_MUTEX */
