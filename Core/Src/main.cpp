@@ -22,6 +22,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <string.h>
+#include <cstdio>
+#include "tasks.hpp"
 
 /* USER CODE END Includes */
 
@@ -48,7 +51,7 @@ osThreadId SlowTaskHandle;
 /* USER CODE BEGIN PV */
 uint8_t Received[5];
 
-uint8_t floor;
+uint8_t floor_;
 uint8_t speed;
 uint8_t error;
 /* USER CODE END PV */
@@ -58,39 +61,39 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 void StartDefaultTask(void const * argument);
-void StartFastTask(void const * argument);
-void StartSlowTask(void const * argument);
+extern void StartFastTask(void const * argument);
+extern void StartSlowTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 
-uint8_t Data[40]; //buffer array
+char Data[40]; //buffer array
 uint16_t size = 0; //message size
 uint8_t variable_to_send = 0;
 char string_to_send[6];
 
 
 if(Received[0] == 'F' && Received[1] == 'L' && Received[2] == 'R'){
-	floor=(Received[3]-48)*10+Received[4]-48;
-	variable_to_send=floor;
-	strcpy(string_to_send,"floor");
+	floor_=(Received[3]-48)*10+Received[4]-48;
+	variable_to_send=floor_;
+	strcpy(string_to_send, "floor");
 }
 else if(Received[0] == 'S' && Received[1] == 'P' && Received[2] == 'D'){
 	speed=(Received[3]-48)*10+Received[4]-48;
 	variable_to_send=speed;
-	strcpy(string_to_send,"speed");
+	strcpy(string_to_send, "speed");
 }
 else{
 	error++;
 	variable_to_send=error;
-	strcpy(string_to_send,"error");
+	strcpy(string_to_send, "error");
 }
 
 
-size = sprintf(Data, "Received message: %s = %d\n\r",string_to_send, variable_to_send);
+size = sprintf(Data, "Received message: %s = %d\n\r", string_to_send, variable_to_send);
 
-HAL_UART_Transmit_IT(&huart2, Data, size); //transmit data with interrupt
+HAL_UART_Transmit_IT(&huart2, reinterpret_cast<uint8_t*>(Data), size); //transmit data with interrupt
 
 HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 HAL_UART_Receive_IT(&huart2, Received, 5); //wait for the next message
@@ -121,7 +124,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-  floor = 0;
+  floor_ = 0;
   speed = 0;
   /* USER CODE END Init */
 
@@ -136,7 +139,7 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-  HAL_UART_Receive_IT(&huart2, &Received, 5);
+  HAL_UART_Receive_IT(&huart2, reinterpret_cast<uint8_t*>(&Received), 5);
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -316,45 +319,9 @@ void StartDefaultTask(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+    osDelay(1000);
   }
   /* USER CODE END 5 */
-}
-
-/* USER CODE BEGIN Header_StartFastTask */
-/**
-* @brief Function implementing the FastTask thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_StartFastTask */
-void StartFastTask(void const * argument)
-{
-  /* USER CODE BEGIN StartFastTask */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END StartFastTask */
-}
-
-/* USER CODE BEGIN Header_StartSlowTask */
-/**
-* @brief Function implementing the SlowTask thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_StartSlowTask */
-void StartSlowTask(void const * argument)
-{
-  /* USER CODE BEGIN StartSlowTask */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END StartSlowTask */
 }
 
 /**

@@ -1,0 +1,11 @@
+/Core/Src/main.c
+Elevator.launch
+STM32F411RETX_FLASH.ld
+STM32F411RETX_RAM.ld
+.settings
+Debug
+Drivers
+Middlewares
+.cproject
+.mxproject
+.project
