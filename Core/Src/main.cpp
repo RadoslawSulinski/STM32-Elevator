@@ -25,6 +25,8 @@
 #include <string.h>
 #include <cstdio>
 #include "tasks.hpp"
+#include "uart_handler.hpp"
+#include "elevator_speed_handler.hpp"
 
 /* USER CODE END Includes */
 
@@ -43,23 +45,24 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+ TIM_HandleTypeDef htim10;
  UART_HandleTypeDef huart2;
 
 osThreadId defaultTaskHandle;
 osThreadId FastTaskHandle;
 osThreadId SlowTaskHandle;
 /* USER CODE BEGIN PV */
-uint8_t Received[5];
-
-uint8_t floor_;
-uint8_t speed;
-uint8_t error;
+uint8_t floor_number {1};
+uint8_t speed_percent {1};
+UartHandler uart(huart2, floor_number, speed_percent);
+ElevatorSpeedHandler speed_handler(htim10, Direction_GPIO_Port, Direction_Pin);
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_TIM10_Init(void);
 void StartDefaultTask(void const * argument);
 extern void StartFastTask(void const * argument);
 extern void StartSlowTask(void const * argument);
@@ -68,35 +71,35 @@ extern void StartSlowTask(void const * argument);
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 
-char Data[40]; //buffer array
-uint16_t size = 0; //message size
-uint8_t variable_to_send = 0;
-char string_to_send[6];
+    uart.process_input();
+//char Data[40]; //buffer array
+//uint16_t size = 0; //message size
+//uint8_t variable_to_send = 0;
+//char string_to_send[6];
+//
+//
+//if(Received[0] == 'F' && Received[1] == 'L' && Received[2] == 'R'){
+//	floor_=(Received[3]-48)*10+Received[4]-48;
+//	variable_to_send=floor_;
+//	strcpy(string_to_send, "floor");
+//}
+//else if(Received[0] == 'S' && Received[1] == 'P' && Received[2] == 'D'){
+//	speed=(Received[3]-48)*10+Received[4]-48;
+//	variable_to_send=speed;
+//	strcpy(string_to_send, "speed");
+//}
+//else{
+//	error++;
+//	variable_to_send=error;
+//	strcpy(string_to_send, "error");
+//}
 
-
-if(Received[0] == 'F' && Received[1] == 'L' && Received[2] == 'R'){
-	floor_=(Received[3]-48)*10+Received[4]-48;
-	variable_to_send=floor_;
-	strcpy(string_to_send, "floor");
-}
-else if(Received[0] == 'S' && Received[1] == 'P' && Received[2] == 'D'){
-	speed=(Received[3]-48)*10+Received[4]-48;
-	variable_to_send=speed;
-	strcpy(string_to_send, "speed");
-}
-else{
-	error++;
-	variable_to_send=error;
-	strcpy(string_to_send, "error");
-}
-
-
-size = sprintf(Data, "Received message: %s = %d\n\r", string_to_send, variable_to_send);
-
-HAL_UART_Transmit_IT(&huart2, reinterpret_cast<uint8_t*>(Data), size); //transmit data with interrupt
-
-HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-HAL_UART_Receive_IT(&huart2, Received, 5); //wait for the next message
+//size = sprintf(Data, "Received message: %s = %d\n\r", string_to_send, variable_to_send);
+//
+//HAL_UART_Transmit_IT(&huart2, reinterpret_cast<uint8_t*>(Data), size); //transmit data with interrupt
+//
+//HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+//HAL_UART_Receive_IT(&huart2, Received, 5); //wait for the next message
 
 
 }
@@ -124,8 +127,6 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-  floor_ = 0;
-  speed = 0;
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -139,7 +140,8 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-  HAL_UART_Receive_IT(&huart2, reinterpret_cast<uint8_t*>(&Received), 5);
+  MX_TIM10_Init();
+//  HAL_UART_Receive_IT(&huart2, reinterpret_cast<uint8_t*>(&Received), 5);
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -164,11 +166,11 @@ int main(void)
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* definition and creation of FastTask */
-  osThreadDef(FastTask, StartFastTask, osPriorityAboveNormal, 0, 128);
+  osThreadDef(FastTask, StartFastTask, osPriorityAboveNormal, 0, 256);
   FastTaskHandle = osThreadCreate(osThread(FastTask), NULL);
 
   /* definition and creation of SlowTask */
-  osThreadDef(SlowTask, StartSlowTask, osPriorityNormal, 0, 128);
+  osThreadDef(SlowTask, StartSlowTask, osPriorityNormal, 0, 256);
   SlowTaskHandle = osThreadCreate(osThread(SlowTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
@@ -237,6 +239,52 @@ void SystemClock_Config(void)
 }
 
 /**
+  * @brief TIM10 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM10_Init(void)
+{
+
+  /* USER CODE BEGIN TIM10_Init 0 */
+
+  /* USER CODE END TIM10_Init 0 */
+
+  TIM_OC_InitTypeDef sConfigOC = {0};
+
+  /* USER CODE BEGIN TIM10_Init 1 */
+
+  /* USER CODE END TIM10_Init 1 */
+  htim10.Instance = TIM10;
+  htim10.Init.Prescaler = 0;
+  htim10.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim10.Init.Period = 65535;
+  htim10.Init.ClockDivision = TIM_CLOCKDIVISION_DIV4;
+  htim10.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim10) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_PWM_Init(&htim10) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.Pulse = 0;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  if (HAL_TIM_PWM_ConfigChannel(&htim10, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM10_Init 2 */
+
+  /* USER CODE END TIM10_Init 2 */
+  HAL_TIM_MspPostInit(&htim10);
+
+}
+
+/**
   * @brief USART2 Initialization Function
   * @param None
   * @retval None
@@ -287,6 +335,9 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(Direction_GPIO_Port, Direction_Pin, GPIO_PIN_RESET);
+
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
@@ -299,6 +350,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : Direction_Pin */
+  GPIO_InitStruct.Pin = Direction_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(Direction_GPIO_Port, &GPIO_InitStruct);
 
 }
 
@@ -319,7 +377,7 @@ void StartDefaultTask(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1000);
+    osDelay(100000);
   }
   /* USER CODE END 5 */
 }
