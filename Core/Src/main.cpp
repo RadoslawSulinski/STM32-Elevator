@@ -56,6 +56,9 @@ uint8_t floor_number {1};
 uint8_t speed_percent {1};
 UartHandler uart(huart2, floor_number, speed_percent);
 ElevatorSpeedHandler speed_handler(htim10, Direction_GPIO_Port, Direction_Pin);
+std::array<FloorSensors, 3> floors {FloorSensors(Floor0_upper_sensor_GPIO_Port, Floor0_upper_sensor_Pin, Floor0_lower_sensor_GPIO_Port, Floor0_lower_sensor_Pin),
+                                    FloorSensors(Floor1_upper_sensor_GPIO_Port, Floor1_upper_sensor_Pin, Floor1_lower_sensor_GPIO_Port, Floor1_lower_sensor_Pin),
+                                    FloorSensors(Floor2_upper_sensor_GPIO_Port, Floor2_upper_sensor_Pin, Floor2_lower_sensor_GPIO_Port, Floor2_lower_sensor_Pin)};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -72,36 +75,6 @@ extern void StartSlowTask(void const * argument);
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 
     uart.process_input();
-//char Data[40]; //buffer array
-//uint16_t size = 0; //message size
-//uint8_t variable_to_send = 0;
-//char string_to_send[6];
-//
-//
-//if(Received[0] == 'F' && Received[1] == 'L' && Received[2] == 'R'){
-//	floor_=(Received[3]-48)*10+Received[4]-48;
-//	variable_to_send=floor_;
-//	strcpy(string_to_send, "floor");
-//}
-//else if(Received[0] == 'S' && Received[1] == 'P' && Received[2] == 'D'){
-//	speed=(Received[3]-48)*10+Received[4]-48;
-//	variable_to_send=speed;
-//	strcpy(string_to_send, "speed");
-//}
-//else{
-//	error++;
-//	variable_to_send=error;
-//	strcpy(string_to_send, "error");
-//}
-
-//size = sprintf(Data, "Received message: %s = %d\n\r", string_to_send, variable_to_send);
-//
-//HAL_UART_Transmit_IT(&huart2, reinterpret_cast<uint8_t*>(Data), size); //transmit data with interrupt
-//
-//HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-//HAL_UART_Receive_IT(&huart2, Received, 5); //wait for the next message
-
-
 }
 
 /* USER CODE END PFP */
@@ -331,6 +304,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
@@ -344,12 +318,30 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
+  /*Configure GPIO pins : Floor0_lower_sensor_Pin Floor0_upper_sensor_Pin */
+  GPIO_InitStruct.Pin = Floor0_lower_sensor_Pin|Floor0_upper_sensor_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : Floor2_upper_sensor_Pin Floor2_lower_sensor_Pin Floor1_upper_level_Pin */
+  GPIO_InitStruct.Pin = Floor2_upper_sensor_Pin|Floor2_lower_sensor_Pin|Floor1_upper_level_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
   /*Configure GPIO pin : LD2_Pin */
   GPIO_InitStruct.Pin = LD2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : Floor1_lower_level_Pin */
+  GPIO_InitStruct.Pin = Floor1_lower_level_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(Floor1_lower_level_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : Direction_Pin */
   GPIO_InitStruct.Pin = Direction_Pin;

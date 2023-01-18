@@ -61,12 +61,24 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define B1_Pin GPIO_PIN_13
 #define B1_GPIO_Port GPIOC
+#define Floor0_lower_sensor_Pin GPIO_PIN_0
+#define Floor0_lower_sensor_GPIO_Port GPIOC
+#define Floor0_upper_sensor_Pin GPIO_PIN_1
+#define Floor0_upper_sensor_GPIO_Port GPIOC
+#define Floor2_upper_sensor_Pin GPIO_PIN_0
+#define Floor2_upper_sensor_GPIO_Port GPIOA
+#define Floor2_lower_sensor_Pin GPIO_PIN_1
+#define Floor2_lower_sensor_GPIO_Port GPIOA
 #define USART_TX_Pin GPIO_PIN_2
 #define USART_TX_GPIO_Port GPIOA
 #define USART_RX_Pin GPIO_PIN_3
 #define USART_RX_GPIO_Port GPIOA
+#define Floor1_upper_level_Pin GPIO_PIN_4
+#define Floor1_upper_level_GPIO_Port GPIOA
 #define LD2_Pin GPIO_PIN_5
 #define LD2_GPIO_Port GPIOA
+#define Floor1_lower_level_Pin GPIO_PIN_0
+#define Floor1_lower_level_GPIO_Port GPIOB
 #define TMS_Pin GPIO_PIN_13
 #define TMS_GPIO_Port GPIOA
 #define TCK_Pin GPIO_PIN_14

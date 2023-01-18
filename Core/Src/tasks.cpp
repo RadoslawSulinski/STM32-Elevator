@@ -8,11 +8,14 @@
 #include "cmsis_os.h"
 #include "uart_handler.hpp"
 #include "elevator_speed_handler.hpp"
+#include "floor_sensors.hpp"
 
 extern uint8_t floor_number;
 extern uint8_t speed_percent;
 extern UartHandler uart;
 extern ElevatorSpeedHandler speed_handler;
+
+extern std::array<FloorSensors, 3> floors;
 
 extern void StartFastTask(void const * argument)
 {
