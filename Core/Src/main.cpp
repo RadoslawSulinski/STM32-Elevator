@@ -26,7 +26,9 @@
 #include <cstdio>
 #include "tasks.hpp"
 #include "uart_handler.hpp"
-#include "elevator_speed_handler.hpp"
+#include "elevator_state_machine.hpp"
+//#include "elevator_speed_handler.hpp"
+//#include "floor_sensors.hpp"
 
 /* USER CODE END Includes */
 
@@ -55,10 +57,14 @@ osThreadId SlowTaskHandle;
 uint8_t floor_number {1};
 uint8_t speed_percent {1};
 UartHandler uart(huart2, floor_number, speed_percent);
-ElevatorSpeedHandler speed_handler(htim10, Direction_GPIO_Port, Direction_Pin);
-std::array<FloorSensors, 3> floors {FloorSensors(Floor0_upper_sensor_GPIO_Port, Floor0_upper_sensor_Pin, Floor0_lower_sensor_GPIO_Port, Floor0_lower_sensor_Pin),
-                                    FloorSensors(Floor1_upper_sensor_GPIO_Port, Floor1_upper_sensor_Pin, Floor1_lower_sensor_GPIO_Port, Floor1_lower_sensor_Pin),
-                                    FloorSensors(Floor2_upper_sensor_GPIO_Port, Floor2_upper_sensor_Pin, Floor2_lower_sensor_GPIO_Port, Floor2_lower_sensor_Pin)};
+ElevatorStateMachine elevator_state_machine(Floor0_upper_sensor_GPIO_Port, Floor0_upper_sensor_Pin, Floor0_lower_sensor_GPIO_Port, Floor0_lower_sensor_Pin,
+                                            Floor1_upper_sensor_GPIO_Port, Floor1_upper_sensor_Pin, Floor1_lower_sensor_GPIO_Port, Floor1_lower_sensor_Pin,
+                                            Floor2_upper_sensor_GPIO_Port, Floor2_upper_sensor_Pin, Floor2_lower_sensor_GPIO_Port, Floor2_lower_sensor_Pin,
+                                            htim10, Direction_GPIO_Port, Direction_Pin);
+//ElevatorSpeedHandler speed_handler(htim10, Direction_GPIO_Port, Direction_Pin);
+//std::array<FloorSensors, 3> floors {FloorSensors(Floor0_upper_sensor_GPIO_Port, Floor0_upper_sensor_Pin, Floor0_lower_sensor_GPIO_Port, Floor0_lower_sensor_Pin),
+//                                    FloorSensors(Floor1_upper_sensor_GPIO_Port, Floor1_upper_sensor_Pin, Floor1_lower_sensor_GPIO_Port, Floor1_lower_sensor_Pin),
+//                                    FloorSensors(Floor2_upper_sensor_GPIO_Port, Floor2_upper_sensor_Pin, Floor2_lower_sensor_GPIO_Port, Floor2_lower_sensor_Pin)};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -75,6 +81,10 @@ extern void StartSlowTask(void const * argument);
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 
     uart.process_input();
+    if(uart.get_input_code() == UartHandler::InputCode::FLOOR)
+    {
+        elevator_state_machine.push_floor(floor_number);
+    }
 }
 
 /* USER CODE END PFP */
@@ -114,7 +124,7 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   MX_TIM10_Init();
-//  HAL_UART_Receive_IT(&huart2, reinterpret_cast<uint8_t*>(&Received), 5);
+  HAL_TIM_PWM_Start(&htim10, TIM_CHANNEL_1);
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -325,7 +335,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pins : Floor2_upper_sensor_Pin Floor2_lower_sensor_Pin Floor1_upper_level_Pin */
-  GPIO_InitStruct.Pin = Floor2_upper_sensor_Pin|Floor2_lower_sensor_Pin|Floor1_upper_level_Pin;
+  GPIO_InitStruct.Pin = Floor2_upper_sensor_Pin|Floor2_lower_sensor_Pin|Floor1_upper_sensor_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
@@ -338,10 +348,10 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : Floor1_lower_level_Pin */
-  GPIO_InitStruct.Pin = Floor1_lower_level_Pin;
+  GPIO_InitStruct.Pin = Floor1_lower_sensor_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(Floor1_lower_level_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(Floor1_lower_sensor_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : Direction_Pin */
   GPIO_InitStruct.Pin = Direction_Pin;

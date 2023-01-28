@@ -7,15 +7,17 @@
 #include "tasks.hpp"
 #include "cmsis_os.h"
 #include "uart_handler.hpp"
-#include "elevator_speed_handler.hpp"
-#include "floor_sensors.hpp"
+#include "elevator_state_machine.hpp"
+//#include "elevator_speed_handler.hpp"
+//#include "floor_sensors.hpp"
 
 extern uint8_t floor_number;
 extern uint8_t speed_percent;
 extern UartHandler uart;
-extern ElevatorSpeedHandler speed_handler;
+extern ElevatorStateMachine elevator_state_machine;
+//extern ElevatorSpeedHandler speed_handler;
 
-extern std::array<FloorSensors, 3> floors;
+//extern std::array<FloorSensors, 3> floors;
 
 extern void StartFastTask(void const * argument)
 {
@@ -26,7 +28,8 @@ extern void StartFastTask(void const * argument)
     {
         uint32_t wake_time = xTaskGetTickCount();
         double const speed_rpm_to_set = std::max(min_rpm, max_rpm * speed_percent / 100);
-        speed_handler.set_speed_rpm(speed_rpm_to_set);
+//        speed_handler.set_speed_rpm(speed_rpm_to_set);
+        elevator_state_machine.set_speed_rpm(speed_rpm_to_set);
         std::size_t message_size = sprintf(local_message_buffer, "speed: %4.2lf rpm\r\n", speed_rpm_to_set);
         uart.write_data(local_message_buffer, message_size);
         osDelayUntil(&wake_time, 100);

@@ -73,12 +73,12 @@ void Error_Handler(void);
 #define USART_TX_GPIO_Port GPIOA
 #define USART_RX_Pin GPIO_PIN_3
 #define USART_RX_GPIO_Port GPIOA
-#define Floor1_upper_level_Pin GPIO_PIN_4
-#define Floor1_upper_level_GPIO_Port GPIOA
+#define Floor1_upper_sensor_Pin GPIO_PIN_4
+#define Floor1_upper_sensor_GPIO_Port GPIOA
 #define LD2_Pin GPIO_PIN_5
 #define LD2_GPIO_Port GPIOA
-#define Floor1_lower_level_Pin GPIO_PIN_0
-#define Floor1_lower_level_GPIO_Port GPIOB
+#define Floor1_lower_sensor_Pin GPIO_PIN_0
+#define Floor1_lower_sensor_GPIO_Port GPIOB
 #define TMS_Pin GPIO_PIN_13
 #define TMS_GPIO_Port GPIOA
 #define TCK_Pin GPIO_PIN_14

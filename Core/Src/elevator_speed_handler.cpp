@@ -26,7 +26,15 @@ ElevatorSpeedHandler::set_speed_rpm(double speed_rpm)
 
     __HAL_TIM_SET_AUTORELOAD(&m_timer_handle, counter_value);
     // Compare always equal to half of Period, since the PWM is used as a square wave, not a real PWM
-    __HAL_TIM_SET_COMPARE(&m_timer_handle, TIM_CHANNEL_1, counter_value/2);
+    // Unless Stop, then compare = 0
+    if(speed_rpm == 0)
+    {
+        __HAL_TIM_SET_COMPARE(&m_timer_handle, TIM_CHANNEL_1, 0);
+    }
+    else
+    {
+        __HAL_TIM_SET_COMPARE(&m_timer_handle, TIM_CHANNEL_1, counter_value/2);
+    }
     bool const direction = speed_rpm < 0;
     HAL_GPIO_WritePin(m_direction_port, m_direction_pin, direction ? GPIO_PIN_SET : GPIO_PIN_RESET);
 }

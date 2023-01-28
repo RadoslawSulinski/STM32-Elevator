@@ -1,10 +1,3 @@
-/*
- * uart_handler.hpp
- *
- *  Created on: Dec 11, 2022
- *      Author: Radoslaw Sulinski
- */
-
 #include <cstdio>
 #include <array>
 #include "stm32f4xx_hal.h"
@@ -18,9 +11,16 @@ class UartInputHandler
     using InBuffer = std::array<uint8_t, IN_BUFFER_SIZE>;
 
 public:
+    enum class InputCode
+    {
+        FLOOR,
+        SPEED
+    };
+
     UartInputHandler(uint8_t & floor, uint8_t & speed) : m_floor(floor), m_speed(speed) {}
 
     void handle_input(InBuffer const & data);
+    InputCode get_input_code();
 
 private:
     using VariableID = std::array<uint8_t, 3>;
@@ -31,6 +31,8 @@ private:
 
     uint8_t & m_floor;
     uint8_t & m_speed;
+
+    InputCode m_last_input_code;
 };
 
 class UartHandler
@@ -40,6 +42,7 @@ public:
     static uint16_t constexpr IN_BUFFER_SIZE = 5;
     using OutBuffer = std::array<uint8_t, OUT_BUFFER_SIZE>;
     using InBuffer = std::array<uint8_t, IN_BUFFER_SIZE>;
+    using InputCode = UartInputHandler::InputCode;
 
     UartHandler(UART_HandleTypeDef & uart_handle, uint8_t & floor, uint8_t & speed)
         : m_uart_handle(uart_handle),
@@ -51,6 +54,7 @@ public:
     void send();
     void receive();
     void process_input();
+    InputCode get_input_code();
 
 private:
     InBuffer m_input_buffer {};

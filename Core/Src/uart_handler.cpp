@@ -93,10 +93,12 @@ uint8_t * UartInputHandler::get_variable(VariableID const & id)
 {
     if((id[0] == 'F' || id[0] == 'f') && (id[1] == 'L' || id[1] == 'l') && (id[2] == 'R' || id[2] == 'r'))
     {
+        m_last_input_code = InputCode::FLOOR;
         return &m_floor;
     }
     else if((id[0] == 'S' || id[0] == 's') && (id[1] == 'P' || id[1] == 'p') && (id[2] == 'D' || id[2] == 'd'))
     {
+        m_last_input_code = InputCode::SPEED;
         return &m_speed;
     }
     else
@@ -116,3 +118,14 @@ uint8_t UartInputHandler::get_value(Value const & value)
         return 100; //invalid value
     }
 }
+
+UartHandler::InputCode UartHandler::get_input_code()
+{
+    return m_input_handler.get_input_code();
+}
+
+UartInputHandler::InputCode UartInputHandler::get_input_code()
+{
+    return m_last_input_code;
+}
+

@@ -1,10 +1,3 @@
-/*
- * tasks.hpp
- *
- *  Created on: Nov 23, 2022
- *      Author: Radoslaw Sulinski
- */
-
 #ifndef INC_TASKS_HPP_
 #define INC_TASKS_HPP_
 
