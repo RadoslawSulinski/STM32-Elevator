@@ -53,7 +53,7 @@ ElevatorStateMachine::get_next_state()
                 return State::IDLE;
             }
         case State::GOING_UP:
-            if(m_floor_sensors[m_target_floor].get_lower_sensor() && m_floor_sensors[m_target_floor].get_upper_sensor())
+            if(m_floor_sensors[m_target_floor-1].get_lower_sensor() && m_floor_sensors[m_target_floor-1].get_upper_sensor())
             {
                 return State::IDLE;
             }
@@ -62,7 +62,7 @@ ElevatorStateMachine::get_next_state()
                 return State::GOING_UP;
             }
         case State::GOING_DOWN:
-            if(m_floor_sensors[m_target_floor].get_lower_sensor() && m_floor_sensors[m_target_floor].get_upper_sensor())
+            if(m_floor_sensors[m_target_floor-1].get_lower_sensor() && m_floor_sensors[m_target_floor-1].get_upper_sensor())
             {
                 return State::IDLE;
             }

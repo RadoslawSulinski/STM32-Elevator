@@ -13,7 +13,7 @@
 class ElevatorSpeedHandler
 {
     static double constexpr CLOCK_FREQUENCY_HZ = 84e6 / 4; // clock divison set to 4 in .ioc
-    static double constexpr STEP_SIZE_DEG = 1.8;
+    static double constexpr STEP_SIZE_DEG = 3.6;
     static int constexpr STEPS_PER_ROTATION = 360/STEP_SIZE_DEG;
     static uint32_t constexpr MAX_COUNTER_VALUE = 65535;
 

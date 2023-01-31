@@ -10,6 +10,8 @@ class ElevatorStateMachine
 {
     static constexpr int MAX_QUEUE_SIZE = 3;
     static constexpr int MIN_IDLE_TIMESTEPS = 10;
+    static constexpr int MIN_FLOOR = 1;
+    static constexpr int MAX_FLOOR = 3;
 public:
     enum class State
     {
@@ -39,13 +41,17 @@ public:
                                                                    FloorSensors{floor_2_upper_port, floor_2_upper_pin, floor_2_lower_port, floor_2_lower_pin},
                                                                    FloorSensors{floor_3_upper_port, floor_3_upper_pin, floor_3_lower_port, floor_3_lower_pin}},
                                                    m_speed_handler(timer_handle, direction_port, direction_pin)
-                                                   {}
+                                                   {m_floor_queue.push(3);}
 
     void update();
 
     void push_floor(int floor)
     {
-        if(m_floor_queue.size() < MAX_QUEUE_SIZE)
+        if(floor < MIN_FLOOR || floor > MAX_FLOOR)
+        {
+            return;
+        }
+        else if(m_floor_queue.size() < MAX_QUEUE_SIZE)
         {
             m_floor_queue.push(floor);
         }
@@ -54,6 +60,21 @@ public:
     void set_speed_rpm(float speed_rpm)
     {
         m_speed_rpm = speed_rpm;
+    }
+
+    State get_state()
+    {
+        return m_current_state;
+    }
+
+    int get_target_floor()
+    {
+        return m_target_floor;
+    }
+
+    std::array<int, 6> get_sensors_state()
+    {
+        return {m_floor_sensors[2].get_upper_sensor(), m_floor_sensors[2].get_lower_sensor(), m_floor_sensors[1].get_upper_sensor(), m_floor_sensors[1].get_lower_sensor(), m_floor_sensors[0].get_upper_sensor(), m_floor_sensors[0].get_lower_sensor()};
     }
 
 private:
